@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+</head>
+<body>
+    <h1>Test Page - If you see this, HTML is working!</h1>
+    <button onclick="alert('JavaScript is working!')">Click Me</button>
+    <div id="test"></div>
+    <script>
+        document.getElementById('test').innerHTML = '<p style="color: green;">✅ JavaScript is working!</p>';
+        
+        // Test API
+        fetch('http://localhost:8001/health')
+            .then(r => r.json())
+            .then(d => {
+                document.body.innerHTML += '<p style="color: green;">✅ API is working! Status: ' + d.status + '</p>';
+            })
+            .catch(e => {
+                document.body.innerHTML += '<p style="color: red;">❌ API Error: ' + e.message + '</p>';
+            });
+    </script>
+</body>
+</html>

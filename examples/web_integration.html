@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oromo TTS Web Integration Example</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 100px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .examples {
+            margin-top: 30px;
+        }
+        .example-text {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            cursor: pointer;
+            border: 1px solid #e9ecef;
+        }
+        .example-text:hover {
+            background: #e9ecef;
+        }
+        .audio-controls {
+            margin-top: 20px;
+        }
+        audio {
+            width: 100%;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Oromo TTS Web Integration</h1>
+        
+        <div class="input-group">
+            <label for="textInput">Enter Oromo Text:</label>
+            <textarea id="textInput" placeholder="Type your Oromo text here...">Akkam jirta? Maqaan koo Yaadannoo dha.</textarea>
+        </div>
+        
+        <div>
+            <button id="generateBtn">🎵 Generate Speech</button>
+            <button id="healthBtn">🏥 Check API Health</button>
+            <button id="clearCacheBtn">🗑️ Clear Cache</button>
+        </div>
+        
+        <div id="status"></div>
+        
+        <div class="audio-controls" id="audioControls" style="display: none;">
+            <h3>Generated Audio:</h3>
+            <audio id="audioPlayer" controls></audio>
+            <div>
+                <button id="downloadBtn">💾 Download Audio</button>
+                <button id="playAgainBtn">🔄 Play Again</button>
+            </div>
+        </div>
+        
+        <div class="examples">
+            <h3>📝 Example Texts (Click to Use):</h3>
+            <div class="example-text" data-text="Akkam jirta? Nagaan jirta?">
+                Akkam jirta? Nagaan jirta? (How are you? Are you well?)
+            </div>
+            <div class="example-text" data-text="Maqaan koo Yaadannoo dha. Ani barsiisaa dha.">
+                Maqaan koo Yaadannoo dha. Ani barsiisaa dha. (My name is Yaadannoo. I am a teacher.)
+            </div>
+            <div class="example-text" data-text="Baga nagaan dhuftan! Otuu nagaan jiraattan.">
+                Baga nagaan dhuftan! Otuu nagaan jiraattan. (Welcome! May you live in peace.)
+            </div>
+            <div class="example-text" data-text="Afaan Oromoo dubbachuu nan danda'a.">
+                Afaan Oromoo dubbachuu nan danda'a. (I can speak Oromo.)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class OromoTTSDemo {
+            constructor() {
+                this.apiUrl = 'http://localhost:8001';
+                this.cache = new Map();
+                this.currentAudioUrl = null;
+                
+                this.initializeElements();
+                this.attachEventListeners();
+                this.checkAPIHealth();
+            }
+            
+            initializeElements() {
+                this.textInput = document.getElementById('textInput');
+                this.generateBtn = document.getElementById('generateBtn');
+                this.healthBtn = document.getElementById('healthBtn');
+                this.clearCacheBtn = document.getElementById('clearCacheBtn');
+                this.statusDiv = document.getElementById('status');
+                this.audioControls = document.getElementById('audioControls');
+                this.audioPlayer = document.getElementById('audioPlayer');
+                this.downloadBtn = document.getElementById('downloadBtn');
+                this.playAgainBtn = document.getElementById('playAgainBtn');
+            }
+            
+            attachEventListeners() {
+                this.generateBtn.addEventListener('click', () => this.generateSpeech());
+                this.healthBtn.addEventListener('click', () => this.checkAPIHealth());
+                this.clearCacheBtn.addEventListener('click', () => this.clearCache());
+                this.downloadBtn.addEventListener('click', () => this.downloadAudio());
+                this.playAgainBtn.addEventListener('click', () => this.playAudio());
+                
+                // Example text click handlers
+                document.querySelectorAll('.example-text').forEach(element => {
+                    element.addEventListener('click', () => {
+                        this.textInput.value = element.dataset.text;
+                        this.generateSpeech();
+                    });
+                });
+                
+                // Enter key to generate
+                this.textInput.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'Enter') {
+                        this.generateSpeech();
+                    }
+                });
+            }
+            
+            showStatus(message, type = 'info') {
+                this.statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+            }
+            
+            async checkAPIHealth() {
+                try {
+                    this.showStatus('Checking API health...', 'info');
+                    
+                    const response = await fetch(`${this.apiUrl}/health`);
+                    const health = await response.json();
+                    
+                    if (health.model_loaded) {
+                        this.showStatus(`✅ API is healthy! Model loaded, cache size: ${health.cache_size}`, 'success');
+                    } else {
+                        this.showStatus('⚠️ API is running but model is not loaded yet', 'error');
+                    }
+                } catch (error) {
+                    this.showStatus(`❌ API is not available: ${error.message}`, 'error');
+                }
+            }
+            
+            async generateSpeech() {
+                const text = this.textInput.value.trim();
+                
+                if (!text) {
+                    this.showStatus('Please enter some text first', 'error');
+                    return;
+                }
+                
+                // Check cache first
+                const cacheKey = text.toLowerCase();
+                if (this.cache.has(cacheKey)) {
+                    this.showStatus('Using cached audio...', 'success');
+                    this.displayAudio(this.cache.get(cacheKey));
+                    return;
+                }
+                
+                try {
+                    this.generateBtn.disabled = true;
+                    this.generateBtn.textContent = '🔄 Generating...';
+                    this.showStatus('Generating speech...', 'info');
+                    
+                    const response = await fetch(`${this.apiUrl}/tts`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text: text })
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.detail || 'TTS generation failed');
+                    }
+                    
+                    const audioBlob = await response.blob();
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    
+                    // Cache the result
+                    this.cache.set(cacheKey, audioUrl);
+                    
+                    this.showStatus(`✅ Speech generated successfully! (${(audioBlob.size / 1024).toFixed(1)} KB)`, 'success');
+                    this.displayAudio(audioUrl);
+                    
+                } catch (error) {
+                    this.showStatus(`❌ Error: ${error.message}`, 'error');
+                } finally {
+                    this.generateBtn.disabled = false;
+                    this.generateBtn.textContent = '🎵 Generate Speech';
+                }
+            }
+            
+            displayAudio(audioUrl) {
+                this.currentAudioUrl = audioUrl;
+                this.audioPlayer.src = audioUrl;
+                this.audioControls.style.display = 'block';
+                
+                // Auto-play the audio
+                this.audioPlayer.play().catch(e => {
+                    console.log('Auto-play prevented by browser:', e);
+                    this.showStatus('Audio ready! Click play button to listen.', 'info');
+                });
+            }
+            
+            playAudio() {
+                if (this.audioPlayer.src) {
+                    this.audioPlayer.currentTime = 0;
+                    this.audioPlayer.play();
+                }
+            }
+            
+            downloadAudio() {
+                if (this.currentAudioUrl) {
+                    const a = document.createElement('a');
+                    a.href = this.currentAudioUrl;
+                    a.download = 'oromo_speech.wav';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    this.showStatus('Audio download started!', 'success');
+                }
+            }
+            
+            clearCache() {
+                // Clean up object URLs
+                for (const url of this.cache.values()) {
+                    URL.revokeObjectURL(url);
+                }
+                this.cache.clear();
+                
+                if (this.currentAudioUrl) {
+                    URL.revokeObjectURL(this.currentAudioUrl);
+                    this.currentAudioUrl = null;
+                }
+                
+                this.audioControls.style.display = 'none';
+                this.showStatus('Cache cleared!', 'success');
+            }
+        }
+        
+        // Initialize the demo when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new OromoTTSDemo();
+        });
+    </script>
+</body>
+</html>

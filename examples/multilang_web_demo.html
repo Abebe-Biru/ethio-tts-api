@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Language TTS Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .language-btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: 2px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .language-btn:hover {
+            background: #f0f0f0;
+            border-color: #667eea;
+        }
+        .language-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            border-color: #667eea !important;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            min-height: 100px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+        }
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        audio {
+            width: 100%;
+            margin: 15px 0;
+        }
+        #audioContainer {
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .example {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        .example:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+        .example:active {
+            transform: translateX(3px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Multi-Language TTS Demo</h1>
+        <p style="text-align: center; color: #666;">Oromo & Amharic Text-to-Speech</p>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button class="language-btn active" id="oromoBtn">Oromo</button>
+            <button class="language-btn" id="amharicBtn">Amharic</button>
+        </div>
+        
+        <div>
+            <label><strong>Enter Text:</strong></label>
+            <textarea id="textInput">Akkam jirta? Maqaan koo Yaadannoo dha.</textarea>
+        </div>
+        
+        <div style="text-align: center;">
+            <button id="generateBtn">🎵 Generate Speech</button>
+            <button id="healthBtn">🏥 Check Status</button>
+        </div>
+        
+        <div id="status"></div>
+        <div id="audioContainer"></div>
+        
+        <div style="margin-top: 20px;">
+            <h3>📝 Examples (Click to use):</h3>
+            <div id="examples"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentLanguage = 'oromo';
+        const apiUrl = 'http://localhost:8001';
+        
+        const examples = {
+            oromo: [
+                "Akkam jirta? Nagaan jirta?",
+                "Maqaan koo Yaadannoo dha.",
+                "Baga nagaan dhuftan!",
+                "Galatoomaa!"
+            ],
+            amharic: [
+                "ሰላም! እንዴት ነህ?",
+                "ስሜ ያዳንኖ ነው።",
+                "እንኳን ደህና መጣህ!",
+                "አመሰግናለሁ!"
+            ]
+        };
+        
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Update button states
+            const oromoBtn = document.getElementById('oromoBtn');
+            const amharicBtn = document.getElementById('amharicBtn');
+            
+            oromoBtn.classList.remove('active');
+            amharicBtn.classList.remove('active');
+            
+            if (lang === 'oromo') {
+                oromoBtn.classList.add('active');
+            } else {
+                amharicBtn.classList.add('active');
+            }
+            
+            // Update examples
+            updateExamples();
+            
+            // Show feedback
+            showStatus(`✅ Switched to ${lang.charAt(0).toUpperCase() + lang.slice(1)}`, 'info');
+        }
+        
+        function updateExamples() {
+            const container = document.getElementById('examples');
+            container.innerHTML = '';
+            examples[currentLanguage].forEach(text => {
+                const div = document.createElement('div');
+                div.className = 'example';
+                div.textContent = text;
+                div.onclick = function() { useExample(text); };
+                container.appendChild(div);
+            });
+        }
+        
+        function useExample(text) {
+            document.getElementById('textInput').value = text;
+            generateSpeech();
+        }
+        
+        function showStatus(message, type = 'info') {
+            document.getElementById('status').innerHTML = 
+                `<div class="status ${type}">${message}</div>`;
+        }
+        
+        async function checkHealth() {
+            try {
+                showStatus('Checking API...', 'info');
+                const response = await fetch(`${apiUrl}/health`);
+                const data = await response.json();
+                showStatus(`✅ API is ${data.status}! Loaded: ${data.loaded_languages.join(', ')}`, 'success');
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function generateSpeech() {
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) {
+                showStatus('⚠️ Please enter some text', 'error');
+                return;
+            }
+            
+            const generateBtn = document.getElementById('generateBtn');
+            const originalText = generateBtn.textContent;
+            
+            try {
+                // Disable button and show loading
+                generateBtn.disabled = true;
+                generateBtn.textContent = '⏳ Generating...';
+                showStatus(`🔄 Generating ${currentLanguage} speech...`, 'info');
+                
+                const response = await fetch(`${apiUrl}/tts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, language: currentLanguage })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Generation failed');
+                }
+                
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                
+                // Create audio element
+                const audioContainer = document.getElementById('audioContainer');
+                audioContainer.innerHTML = `
+                    <h3>🔊 Generated Audio:</h3>
+                    <audio id="audioPlayer" controls src="${url}"></audio>
+                    <br>
+                    <button id="downloadBtn">💾 Download</button>
+                `;
+                
+                // Setup download button
+                document.getElementById('downloadBtn').onclick = function() { downloadAudio(url); };
+                
+                // Play audio automatically
+                const audioPlayer = document.getElementById('audioPlayer');
+                audioPlayer.play().catch(err => {
+                    console.log('Autoplay prevented:', err);
+                    showStatus(`✅ Speech generated! (${(blob.size/1024).toFixed(1)} KB) - Click play to listen`, 'success');
+                });
+                
+                showStatus(`✅ Speech generated! (${(blob.size/1024).toFixed(1)} KB)`, 'success');
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                // Re-enable button
+                generateBtn.disabled = false;
+                generateBtn.textContent = originalText;
+            }
+        }
+        
+        function downloadAudio(url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentLanguage}_speech.wav`;
+            a.click();
+        }
+        
+        // Initialize and attach event listeners
+        document.getElementById('oromoBtn').onclick = function() { switchLanguage('oromo'); };
+        document.getElementById('amharicBtn').onclick = function() { switchLanguage('amharic'); };
+        document.getElementById('generateBtn').onclick = generateSpeech;
+        document.getElementById('healthBtn').onclick = checkHealth;
+        
+        updateExamples();
+        checkHealth();
+    </script>
+</body>
+</html>
