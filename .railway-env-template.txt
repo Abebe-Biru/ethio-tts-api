@@ -1,0 +1,12 @@
+# Copy these to Railway's Environment Variables
+# Go to: Railway Dashboard → Your Project → Variables Tab
+
+WEBHOOK_SECRET=GENERATE_WITH_COMMAND_BELOW
+DEBUG=false
+HOST=0.0.0.0
+CORS_ORIGINS=*
+
+# To generate WEBHOOK_SECRET, run:
+# python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# Note: Railway automatically sets PORT - don't add it!
