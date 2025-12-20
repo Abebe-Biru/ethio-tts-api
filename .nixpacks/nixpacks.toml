@@ -1,10 +1,12 @@
 [phases.setup]
-nixPkgs = ["python310", "libsndfile", "python310Packages.setuptools"]
+nixPkgs = ["python310", "libsndfile", "python310Packages.setuptools", "python310Packages.pip"]
 
 [phases.install]
 cmds = [
-    "pip install uv",
-    "pip install setuptools",
+    "python -m pip install --upgrade pip",
+    "python -m pip install uv",
+    "python -m pip install setuptools",
+    "chmod +x install_cpu_torch.sh",
     "./install_cpu_torch.sh"
 ]
 
