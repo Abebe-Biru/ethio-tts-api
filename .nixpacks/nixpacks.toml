@@ -1,10 +1,10 @@
 [phases.setup]
-nixPkgs = ["python312", "libsndfile"]
+nixPkgs = ["python310", "libsndfile"]
 
 [phases.install]
 cmds = [
     "pip install uv",
-    "uv sync --frozen"
+    "uv sync --frozen --index-url https://download.pytorch.org/whl/cpu"
 ]
 
 [phases.build]
