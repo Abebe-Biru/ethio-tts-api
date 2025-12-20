@@ -1,8 +1,8 @@
 [phases.setup]
-nixPkgs = ["...", "libsndfile", "gcc"]
+nixPkgs = ["python312", "libsndfile", "gcc"]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = ["pip install uv", "uv sync --frozen"]
 
 [phases.build]
 cmds = []
