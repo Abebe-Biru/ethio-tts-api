@@ -30,6 +30,7 @@ env.bak/
 venv.bak/
 
 # IDE
+.kiro/
 .vscode/
 .idea/
 *.swp
