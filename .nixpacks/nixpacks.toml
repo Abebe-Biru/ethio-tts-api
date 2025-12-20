@@ -1,10 +1,13 @@
 [phases.setup]
-nixPkgs = []
+nixPkgs = ["python310", "libsndfile"]
 
 [phases.install]
 cmds = [
-    "python3.10 -m pip install --upgrade pip",
-    "python3.10 -m pip install uv setuptools wheel",
+    "python -m pip install --upgrade pip",
+    "python -m pip install setuptools wheel",
+    "python -c \"import sys; print(sys.version)\"",
+    "python -c \"import distutils; print('distutils available')\" || echo 'distutils not available'",
+    "python -m pip install uv",
     "chmod +x install_cpu_torch.sh",
     "./install_cpu_torch.sh"
 ]
@@ -13,4 +16,4 @@ cmds = [
 cmds = []
 
 [start]
-cmd = "python3.10 -m api"
+cmd = "python -m api"
