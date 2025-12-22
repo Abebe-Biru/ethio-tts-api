@@ -34,8 +34,8 @@ app = FastAPI(
     title="Multi-Language TTS API",
     description="A FastAPI service for text-to-speech in Oromo and Amharic using Meta's MMS-TTS models",
     version="2.0.0",
-    docs_url="/docs" if settings.debug else None,
-    redoc_url="/redoc" if settings.debug else None
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 # Add middlewares (order matters!)
