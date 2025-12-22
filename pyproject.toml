@@ -2,7 +2,6 @@
 name = "oromo-tts-api"
 version = "2.0.0"
 description = "Multi-Language TTS API - Text-to-speech service for Oromo and Amharic using Meta's MMS-TTS models"
-readme = "README.md"
 requires-python = ">=3.10,<3.11"
 dependencies = [
     "boltons>=25.0.0",
