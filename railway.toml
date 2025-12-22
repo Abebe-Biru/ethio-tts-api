@@ -4,6 +4,11 @@ builder = "NIXPACKS"
 [build.env]
 PYTHON_VERSION = "3.10"
 
+[phases.install]
+cmds = [
+  "pip install torch==2.5.1+cpu --index-url https://download.pytorch.org/whl/cpu"
+]
+
 [deploy]
 startCommand = "python -m api"
 healthcheckPath = "/v1/health"
