@@ -5,12 +5,10 @@ services:
     plan: free
     region: oregon
     branch: main
-    buildCommand: "./build.sh"
+    buildCommand: "bash build.sh"
     startCommand: "python -m api"
     healthCheckPath: /v1/health
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.10.15
       - key: DEBUG
         value: false
       - key: HOST
