@@ -23,7 +23,8 @@ pip install --no-deps transformers>=4.57.0
 
 # Install all other dependencies from pyproject.toml
 echo "Installing application dependencies..."
-pip install boltons>=25.0.0 \
+pip install aiofiles>=23.2.1 \
+    boltons>=25.0.0 \
     deepdiff>=8.6.1 \
     diskcache>=5.6.3 \
     fastapi>=0.119.0 \

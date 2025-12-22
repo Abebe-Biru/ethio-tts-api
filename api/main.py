@@ -109,6 +109,24 @@ async def shutdown_event():
 # CORE ENDPOINTS - Root and Metrics only
 # ============================================================================
 
+# ============================================================================
+# PLAYGROUND & STATIC FILES
+# ============================================================================
+
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+
+# Mount static files
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+@app.get("/playground")
+async def playground():
+    """Serve the API playground"""
+    return FileResponse(os.path.join(static_dir, "index.html"))
+
 @app.get("/")
 async def root():
     """API root endpoint with information"""
@@ -127,23 +145,24 @@ async def root():
             "Batch processing"
         ],
         "endpoints": {
+            "playground": "GET /playground - Interactive API Playground",
             "health": "GET /v1/health - Health check",
             "languages": "GET /v1/languages - List supported languages",
             "load_model": "POST /v1/languages/{language}/load - Preload language model",
             "tts": "POST /v1/tts - Generate speech from text",
             "batch_tts": "POST /v1/batch_tts - Batch speech generation",
             "metrics": "GET /metrics - Prometheus metrics",
-            "docs": "GET /docs - API documentation (debug mode only)"
+            "docs": "GET /docs - API documentation"
         },
         "rate_limits": {
             "per_minute": 60,
             "per_hour": 1000,
             "note": "Use X-API-Key header for tracking"
         },
-        "documentation": {
-            "quick_start": "See QUICK_START_V1.md",
-            "full_guide": "See API_V1_GUIDE.md",
-            "upgrade_info": "See UPGRADE_SUMMARY.md"
+        "links": {
+            "playground": "/playground",
+            "documentation": "/docs",
+            "health": "/v1/health"
         }
     }
 
