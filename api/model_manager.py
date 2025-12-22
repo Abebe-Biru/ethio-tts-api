@@ -39,8 +39,27 @@ class MultiLanguageModelManager:
             log.info("loading_model", language=language, model_name=model_name)
             
             # Load model and tokenizer
+            log.info("loading_model_weights", language=language, model_name=model_name)
+            
+            # UNLOAD OTHER MODELS FIRST to save RAM on free tiers
+            # This implements strict "Single Model Mode"
+            current_loaded = list(self.models.keys())
+            for loaded_lang in current_loaded:
+                if loaded_lang != language:
+                    log.info("unloading_other_model_for_memory", target_language=language, unloading=loaded_lang)
+                    self.unload_model(loaded_lang)
+
             model = VitsModel.from_pretrained(model_name)
             tokenizer = AutoTokenizer.from_pretrained(model_name)
+            
+            # Apply Dynamic Quantization (Float32 -> Int8)
+            # This reduces model size by ~4x (150MB -> 40MB) and speeds up CPU inference
+            log.info("quantizing_model", language=language)
+            model = torch.quantization.quantize_dynamic(
+                model,
+                {torch.nn.Linear},
+                dtype=torch.qint8
+            )
             
             # Set to evaluation mode and move to device
             model.eval()
@@ -61,7 +80,8 @@ class MultiLanguageModelManager:
                 language=language,
                 model_name=model_name,
                 device=str(self.device), 
-                sampling_rate=sampling_rate
+                sampling_rate=sampling_rate,
+                quantized=True
             )
             
             return model, tokenizer, config
